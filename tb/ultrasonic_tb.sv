@@ -1,0 +1,56 @@
+`timescale 1ns/1ns
+
+module ultrasonic_tb();
+
+    logic clk;
+    logic reset;
+    logic start_ultrasonic;
+
+    logic trigger;
+    logic echo;
+
+    logic enable_counter;
+    logic reset_count;
+
+    logic [21:0] count;
+
+    //logic [8:0] dst;
+    logic [2:0] obst;
+    logic valid;
+
+    ultrasonic_timebase test1 (.*);
+
+    ultrasonic_sensor test2 (.*);
+
+    always
+       #5 clk = ~clk;  // period 10ns (100 MHz)
+    initial
+       clk = 0;
+
+    initial begin
+                reset = 1; start_ultrasonic = 0; echo = 0; 
+     #10;       reset = 0; 
+
+
+     #10; start_ultrasonic = 1;
+     #10 start_ultrasonic = 0;
+     #20000; echo = 1;
+     #17110000; echo = 0; // wait 295cm * 58 * 1000 = 17 110 000 ns
+     
+
+     #10000; start_ultrasonic = 1;
+     #20000; echo = 1;
+     #7192000; echo = 0; // 124cm*58*1000 = 7 192 000 ns
+     #10 start_ultrasonic = 0;
+
+	
+     #10000; start_ultrasonic = 1;
+     #10; start_ultrasonic = 0;
+     #20000; echo = 1;
+     #1392000; echo = 0; // 24cm*58*1000 = 1 392 000 ns
+     #10 start_ultrasonic = 0;
+
+
+    end
+
+endmodule
