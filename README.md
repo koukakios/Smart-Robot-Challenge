@@ -1,93 +1,113 @@
-# SystemVerilog
+﻿# FPGA-Based Smart Robot Controller
 
+SystemVerilog-based FPGA control stack for an autonomous line-following maze robot, with UART/XBee communication, ultrasonic obstacle detection, PWM motor control, and PC-side route-planning integration.
 
+> University group project from TU Delft EE1L2 IP-2 “Building a Smart Robot”. This repository focuses mainly on the FPGA/embedded-control layer.
 
-## Getting started
+## Key Features
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- FSM-based main robot controller
+- UART communication controller
+- direction decoder for encoded movement instructions
+- PWM motor control
+- line-following direction control
+- ultrasonic distance measurement controller
+- wall/distance encoding for route-planner feedback
+- simulation testbenches for major modules
+- FPGA constraint files
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## System Architecture
 
-## Add your files
+PC Route Planner (C)
+        |
+     XBee UART
+        |
+FPGA UART RX/TX
+        |
+Communication Controller
+        |
+Main Controller FSM
+   |          |          |
+Direction   Ultrasonic   Motor PWM
+Control     Controller   Controller
+   |
+Robot motors / sensors
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## Repository Structure
 
-```
-cd existing_repo
-git remote add origin https://gitlab.ewi.tudelft.nl/ip-2-ee1l2-2024-2025/tas/group-a3_2/systemverilog.git
-git branch -M main
-git push -uf origin main
-```
+- src/top/ — top-level robot integration
+- src/controllers/ — main control FSM and motor direction logic
+- src/communication/ — UART, instruction decoding, and communication helpers
+- src/sensors/ — ultrasonic sensor timing and measurement logic
+- src/timing/ — shared timebase logic
+- src/constraints/ — FPGA constraint files
+- 	b/ — simulation testbenches
+- docs/ — architecture, protocol, FSM, and testing documentation
+- legacy/ — non-primary lab artifacts and backups
 
-## Integrate with your tools
+## Protocol Overview
 
-- [ ] [Set up project integrations](https://gitlab.ewi.tudelft.nl/ip-2-ee1l2-2024-2025/tas/group-a3_2/systemverilog/-/settings/integrations)
+The robot receives encoded 8-bit instruction bytes from a PC-side planner and sends compact obstacle/distance status back to the PC. The instruction packet format includes redundancy and a small direction payload to support reliable embedded decoding.
 
-## Collaborate with your team
+## FPGA Modules
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+| Module | File | Responsibility |
+|---|---|---|
+| Top-level integration | src/top/robot.sv | Connects core controllers, sensors, UART, and PWM outputs |
+| Main robot FSM | src/controllers/main_controller.sv | Decides movement actions and communication timing |
+| Communication FSM | src/controllers/communication_control.sv | Sequences ultrasonic measurement, transmit, and receive states |
+| Direction control | src/controllers/direction_controller.sv | Converts actions into motor drive signals and line-following behavior |
+| PWM motor controller | src/controllers/motorcontrol.sv | Generates motor PWM waveform based on direction and timing |
+| UART interface | src/communication/uart.sv | Implements transmit and receive UART modules for XBee communication |
+| Instruction decoder | src/communication/direction_decoder.sv | Decodes 8-bit command words into movement actions |
+| Wall/distance encoder | src/communication/wall_detection_encoder.sv | Encodes obstacle distance data for the planner |
+| Ultrasonic controller | src/sensors/ultrasonic_controller.sv | Interfaces with the ultrasonic sensor and provides distance measurements |
+| Timebase logic | src/timing/timebase.sv | Provides reusable timing counters for controllers |
 
-## Test and Deploy
+## Simulation / Testbenches
 
-Use the built-in continuous integration in GitLab.
+Major testbenches are available in 	b/:
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+- 	b/comm_control_tb.sv
+- 	b/directioncontrol_tb.sv
+- 	b/maincontroller_tb.sv
+- 	b/motorcontrol_tb.sv
+- 	b/robot_tb.sv
+- 	b/timebase_tb.sv
+- 	b/uart_tb.sv
+- 	b/ultrasonic_tb.sv
 
-***
+See docs/testing.md for general guidance on running simulations.
 
-# Editing this README
+## Hardware Context
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+- FPGA board used for robot control
+- UART/XBee wireless communication link
+- Ultrasonic sensor for obstacle detection
+- Colour sensors for line following
+- PWM-controlled motor driver
 
-## Suggestions for a good README
+## Status
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+- Archived university project
+- Code is kept for portfolio/review purposes
+- Some files may depend on the original lab environment/toolchain
 
-## Name
-Choose a self-explaining name for your project.
+## What I Worked On / Technical Focus
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+This repository demonstrates FPGA-based embedded control design, including SystemVerilog FSM design, UART communication, sensor interfacing, motor-control logic, and hardware/software integration. It is presented honestly as part of a university group project rather than a commercial product.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## Skills Demonstrated
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- SystemVerilog
+- FSM design
+- UART communication
+- FPGA-based motor control
+- sensor interfacing
+- embedded robotics
+- testbench-driven verification
+- hardware/software co-design
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## License / Academic Note
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This repository is shared for portfolio and review purposes and originates from a university group project. It is not a maintained commercial robotics framework.

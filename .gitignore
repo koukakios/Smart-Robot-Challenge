@@ -1,1 +1,16 @@
-robot.sv.bak
+﻿# Generated and build artifacts
+*.jou
+*.log
+*.wdb
+*.vcd
+*.fst
+work/
+transcript
+*.rpt
+*.bit
+*.bin
+*.cache/
+*.hw/
+*.runs/
+*.sim/
+.Xil/

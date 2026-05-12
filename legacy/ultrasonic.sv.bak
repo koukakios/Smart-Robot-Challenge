@@ -1,0 +1,95 @@
+module ultrasonic_sensor 
+   (input logic clk,
+    input logic reset,
+    input logic start_ultrasonic, 
+
+    output logic trigger,
+    input logic echo,
+
+    output logic enable_counter,
+    output logic reset_count,
+    input logic [21:0] count,
+
+    output logic [8:0] dst);
+
+    // END OF INPUT/OUTPUT DEFINITIONS
+
+
+    typedef enum logic [2:0] {
+    WAIT, SEND, AWAIT_ECHO, MEASURE_ECHO, AWAIT_START_LOW
+    } fsm_state;
+
+    fsm_state state, next_state;
+
+    logic [8:0] calc_dst;
+    //logic [7:0] dst;
+ 
+
+
+    always_ff @(posedge clk)
+        if (reset) begin
+            	state <= WAIT;
+            	dst <= 9'b0;
+	    end
+        else
+            begin
+                state <= next_state;
+                if (state == AWAIT_START_LOW) 
+                    dst <= calc_dst;
+            end
+
+    always_comb
+        begin
+            trigger = 1'b0;
+            enable_counter = 1'b0;
+            reset_count = 1'b1;
+            calc_dst = 8'd0;
+            next_state = state;
+            case (state)
+                WAIT:
+                    begin
+                        calc_dst = count / (4'd5800); //58 * 100 = 5800
+                        if (start_ultrasonic) next_state = SEND;
+                    end
+                SEND:
+                    begin	
+                        trigger = 1'b1;
+                        reset_count = 1'b0;
+                        enable_counter = 1'b1;
+
+                        // 10 us / 10ns = 1000
+                        if (count >= 1000) next_state = AWAIT_ECHO;
+
+                    end
+                AWAIT_ECHO:
+                    begin 
+                        if (echo) next_state = MEASURE_ECHO;
+                    end
+                MEASURE_ECHO:
+                    begin
+                        reset_count = 1'b0;
+                        enable_counter = 1'b1;
+                        if (~echo) next_state = AWAIT_START_LOW;
+                    end
+                AWAIT_START_LOW:
+                    begin
+                        reset_count = 1'b0;
+                        calc_dst = count / (4'd5800); // 58 * 100 = 5800 
+                        if (start_ultrasonic) next_state = WAIT;
+                    end
+                default:
+                    begin
+                        trigger = 1'b0;
+                        enable_counter = 1'b0;
+                        reset_count = 1'b1;
+                        next_state = state;
+                    end
+                        
+            endcase
+
+        end
+    
+    
+
+
+endmodule
